@@ -1,0 +1,13 @@
+server:
+  applicationContextPath: /
+  adminContextPath: /admin
+  applicationConnectors:
+    - type: http
+      port: 8080
+  adminConnectors:
+    - type: http
+      port: 8081
+
+jdbcUrl: "jdbc:mariadb://localhost:3306/StudentCourseDB"
+username: "root"
+password: "Mayur7218@"
