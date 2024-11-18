@@ -7,10 +7,7 @@ import jakarta.ws.rs.core.Response;
 import org.example.dao.StudentDAO;
 import org.example.models.Course;
 import org.example.models.Student;
-import io.dropwizard.jersey.params.IntParam;
-
 import java.util.List;
-
 
 @Path("/students")
 @Produces(MediaType.APPLICATION_JSON)
@@ -21,42 +18,75 @@ public class StudentResource {
         this.studentDAO = studentDAO;
     }
 
-    @POST
-    public Response createStudent(@Valid Student student) {
-        studentDAO.createStudent(student);
-        return Response.status(Response.Status.CREATED).entity(student).build();
-    }
 
     @GET
     @Path("/{studentId}")
-    public Response getStudent(@PathParam("studentId") IntParam studentId) {
-        Student student = studentDAO.getStudentById(studentId.get());
+    public Response getStudent(@PathParam("studentId") long studentId) {
+        Student student = studentDAO.getStudentById(studentId);
         if (student == null) {
             return Response.status(Response.Status.NOT_FOUND).entity("Student not found").build();
         }
         return Response.ok(student).build();
     }
 
-    @GET
-    public Response getAllStudents() {
-        List<Student> students = studentDAO.getAllStudents();
-        return Response.ok(students).build();
+    @POST
+    public Response createStudent(@Valid Student student) {
+        int rowsAffected = studentDAO.createStudent(student);
+        if (rowsAffected > 0) {
+            return Response.status(Response.Status.CREATED).entity(student).build();
+        } else {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Failed to create student").build();
+        }
     }
 
     @PUT
     @Path("/{studentId}")
-    public Response updateStudent(@PathParam("studentId") IntParam studentId, @Valid Student student) {
-        student.setId(studentId.get());
-        studentDAO.updateStudent(student);
-        return Response.ok(student).build();
+    public Response updateStudent(@PathParam("studentId") long studentId, @Valid Student student) {
+        student.setId(studentId);
+        int rowsAffected = studentDAO.updateStudent(student);
+        if (rowsAffected > 0) {
+            return Response.ok(student).build();
+        } else {
+            return Response.status(Response.Status.NOT_FOUND).entity("Student not found").build();
+        }
     }
 
     @DELETE
     @Path("/{studentId}")
-    public Response deleteStudent(@PathParam("studentId") IntParam studentId) {
-        studentDAO.deleteStudent(studentId.get());
-        return Response.status(Response.Status.NO_CONTENT).build();
+    public Response deleteStudent(@PathParam("studentId") long studentId) {
+        int rowsAffected = studentDAO.deleteStudent(studentId);
+        if (rowsAffected > 0) {
+            return Response.status(Response.Status.NO_CONTENT).build();
+        } else {
+            return Response.status(Response.Status.NOT_FOUND).entity("Student not found").build();
+        }
     }
+    //Sorting, Filtering, Pagination
+    @GET
+    public Response getAllStudents(
+            @QueryParam("sort") String sort,
+            @QueryParam("minAge") Integer minAge,
+            @QueryParam("maxAge") Integer maxAge,
+            @QueryParam("minGrade") Double minGrade,
+            @QueryParam("maxGrade") Double maxGrade,
+            @QueryParam("page") @DefaultValue("1") int page,
+            @QueryParam("size") @DefaultValue("10") int size) {
+
+        int offset = (page - 1) * size;
+        int limit = size;
+
+        Integer ageMin = minAge != null ? minAge : 0;
+        Integer ageMax = maxAge != null ? maxAge : Integer.MAX_VALUE;
+        Double gradeMin = minGrade != null ? minGrade : 0.0;
+        Double gradeMax = maxGrade != null ? maxGrade : Double.MAX_VALUE;
+
+
+        List<Student> students = studentDAO.getFilteredSortedPaginatedStudents(sort, ageMin, ageMax, gradeMin, gradeMax, limit, offset);
+
+        return Response.ok(students).build();
+    }
+
+
 
     //Many to Many relation
     @POST

@@ -28,13 +28,4 @@ public class Course {
     public void setStudents(List<Student> students) {
         this.students = students;
     }
-
-    public void addStudent(Student student){
-        this.students.add(student);
-        student.getCourses().add(this);
-    }
-    public void removeStudent(Student student){
-        this.students.remove(student);
-        student.getCourses().remove(this);
-    }
 }

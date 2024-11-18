@@ -11,22 +11,27 @@ import java.util.List;
 
 public interface StudentDAO {
 
-    @SqlUpdate("INSERT INTO students (name, age, grade) VALUES (:name, :age, :grade)")
-    void createStudent(@BindBean Student student);
+    @SqlQuery("SELECT * FROM students")
+    @RegisterBeanMapper(Student.class)
+    List<Student> getAllStudents();
 
     @SqlQuery("SELECT * FROM students WHERE id = :id")
     @RegisterBeanMapper(Student.class)
     Student getStudentById(@Bind("id") long id);
 
-    @SqlQuery("SELECT * FROM students")
+    // Create method returns the created student, including the generated ID.
+    @SqlUpdate("INSERT INTO students (name, age, grade) VALUES (:name, :age, :grade)")
     @RegisterBeanMapper(Student.class)
-    List<Student> getAllStudents();
+    int createStudent(@BindBean Student student);
 
+    // Update method returns the updated student.
     @SqlUpdate("UPDATE students SET name = :name, age = :age, grade = :grade WHERE id = :id")
-    void updateStudent(@BindBean Student student);
+    @RegisterBeanMapper(Student.class)
+    int updateStudent(@BindBean Student student);
 
+    // Delete method returns true if the student was deleted successfully.
     @SqlUpdate("DELETE FROM students WHERE id = :id")
-    void deleteStudent(@Bind("id") long id);
+    int deleteStudent(@Bind("id") long id);
 
 
     @SqlUpdate("INSERT INTO student_courses (student_id, course_id) VALUES (:studentId, :courseId)")
@@ -39,4 +44,22 @@ public interface StudentDAO {
     @RegisterBeanMapper(Course.class)
     List<Course> getCoursesByStudentId(@Bind("studentId") long studentId);
 
+
+    @SqlQuery("SELECT * FROM students " +
+            "WHERE age BETWEEN :ageMin AND :ageMax " +
+            "AND grade BETWEEN :gradeMin AND :gradeMax " +
+            "ORDER BY CASE WHEN :sortField = 'name' THEN name END " +
+            "        , CASE WHEN :sortField = 'age' THEN age END " +
+            "        , CASE WHEN :sortField = 'grade' THEN grade END " +
+            "LIMIT :limit OFFSET :offset")
+    @RegisterBeanMapper(Student.class)
+    List<Student> getFilteredSortedPaginatedStudents(
+            @Bind("sortField") String sortField,
+            @Bind("ageMin") int ageMin,
+            @Bind("ageMax") int ageMax,
+            @Bind("gradeMin") double gradeMin,
+            @Bind("gradeMax") double gradeMax,
+            @Bind("limit") int limit,
+            @Bind("offset") int offset
+    );
 }

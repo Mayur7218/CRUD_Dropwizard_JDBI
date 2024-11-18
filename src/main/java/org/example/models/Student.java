@@ -11,6 +11,7 @@ public class Student {
 
     List<Course> courses = new ArrayList<>();
 
+
     public long getId() { return id; }
     public void setId(long id) { this.id = id; }
 
@@ -29,15 +30,5 @@ public class Student {
 
     public void setCourses(List<Course> courses) {
         this.courses = courses;
-    }
-
-    public void addCourse(Course course){
-        this.courses.add(course);
-        course.getStudents().add(this);
-    }
-    public void removeCourse(Course course){
-        this.courses.remove(course);
-        course.getStudents().remove(this);
-
     }
 }
